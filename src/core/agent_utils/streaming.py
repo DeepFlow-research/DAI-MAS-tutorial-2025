@@ -56,7 +56,7 @@ async def stream_agent_output(runner: RunResultStreaming, context: Any = None) -
                 if hasattr(event, "new_agent") and event.new_agent:
                     console.print(
                         f"\n👤 [Agent: {event.new_agent.name}]\n",
-                        style="bold cyan",
+                        style="bold magenta",
                     )
 
     finally:
@@ -159,11 +159,11 @@ async def _handle_raw_response_event(
                             else tool_call.arguments
                         )
                         if args_dict:
-                            console.print("   Parameters:")
+                            console.print("   Parameters:", style="dim")
                             for key, value in args_dict.items():
-                                console.print(f"     • {key}: {value}")
+                                console.print(f"     • {key}: {value}", style="dim")
                     except (json.JSONDecodeError, TypeError):
-                        console.print(f"   Parameters: {tool_call.arguments}")
+                        console.print(f"   Parameters: {tool_call.arguments}", style="dim")
 
     # Handle tool call completion (function call done) - we'll show result when it arrives
     elif isinstance(data, ResponseOutputItemDoneEvent):
@@ -272,10 +272,10 @@ async def _handle_run_item_event(
         # Format output based on type
         if isinstance(output, dict):
             # Pretty print dictionary output
-            _print_dict_nicely(output, indent=2)
+            _print_dict_nicely(output, indent=2, max_depth=3, is_first_key=True)
         elif hasattr(output, "model_dump"):
             # Pydantic model
-            _print_dict_nicely(output.model_dump(), indent=2)
+            _print_dict_nicely(output.model_dump(), indent=2, max_depth=3, is_first_key=True)
         elif isinstance(output, list):
             # List output
             if len(output) == 0:
@@ -284,7 +284,7 @@ async def _handle_run_item_event(
                 for i, output_item in enumerate(output[:10], 1):  # Show first 10 items
                     console.print(f"   {i}. {output_item}")
                 if len(output) > 10:
-                    console.print(f"   ... and {len(output) - 10} more items", style="italic")
+                    console.print(f"   ... and {len(output) - 10} more items", style="dim italic")
         elif isinstance(output, str):
             # String output - check if it's an error
             if "error" in output.lower() or "Error:" in output:
@@ -298,7 +298,7 @@ async def _handle_run_item_event(
             console.print(f"   {truncated}")
 
 
-def _print_dict_nicely(data: dict, indent: int = 0, max_depth: int = 3) -> None:
+def _print_dict_nicely(data: dict, indent: int = 0, max_depth: int = 3, is_first_key: bool = True) -> None:
     """
     Print a dictionary in a more readable format for demos.
 
@@ -306,38 +306,50 @@ def _print_dict_nicely(data: dict, indent: int = 0, max_depth: int = 3) -> None:
         data: Dictionary to print
         indent: Current indentation level
         max_depth: Maximum nesting depth to print
+        is_first_key: Whether this is the first key in the dict (for coloring)
     """
     if indent // 2 > max_depth:
         print(" " * indent + "...", flush=True)
         return
 
     prefix = " " * indent
+    first_key_processed = False
     for key, value in data.items():
         # Format key nicely
         display_key = " ".join(
             word.capitalize() for word in str(key).replace("_", " ").split()
         )
+        
+        # Color the first key for visual separation
+        is_current_first = is_first_key and not first_key_processed
+        first_key_processed = True
 
         if isinstance(value, dict):
-            print(f"{prefix}• {display_key}:", flush=True)
-            _print_dict_nicely(value, indent + 2, max_depth)
+            if is_current_first:
+                console.print(f"{prefix}• {display_key}:", style="bold cyan")
+            else:
+                print(f"{prefix}• {display_key}:", flush=True)
+            _print_dict_nicely(value, indent=indent + 2, max_depth=max_depth, is_first_key=False)
         elif isinstance(value, list):
-            print(f"{prefix}• {display_key}:", flush=True)
+            if is_current_first:
+                console.print(f"{prefix}• {display_key}:", style="bold cyan")
+            else:
+                print(f"{prefix}• {display_key}:", flush=True)
             if len(value) == 0:
                 print(f"{prefix}  (empty)", flush=True)
-            elif len(value) <= 3:
+            elif len(value) <= 25:
                 for item in value:
                     if isinstance(item, dict):
-                        _print_dict_nicely(item, indent + 2, max_depth)
+                        _print_dict_nicely(item, indent=indent + 2, max_depth=max_depth, is_first_key=True)
                     else:
                         print(f"{prefix}  - {item}", flush=True)
             else:
-                for item in value[:3]:
+                for item in value[:25]:
                     if isinstance(item, dict):
-                        _print_dict_nicely(item, indent + 2, max_depth)
+                        _print_dict_nicely(item, indent=indent + 2, max_depth=max_depth, is_first_key=True)
                     else:
                         print(f"{prefix}  - {item}", flush=True)
-                print(f"{prefix}  ... and {len(value) - 3} more items", flush=True)
+                console.print(f"{prefix}  ... and {len(value) - 25} more items", style="dim italic")
         else:
             # Format value nicely
             if value is None:
@@ -352,4 +364,7 @@ def _print_dict_nicely(data: dict, indent: int = 0, max_depth: int = 3) -> None:
                 if len(display_value) > 100:
                     display_value = display_value[:100] + "..."
 
-            print(f"{prefix}• {display_key}: {display_value}", flush=True)
+            if is_current_first:
+                console.print(f"{prefix}• {display_key}: {display_value}", style="bold cyan")
+            else:
+                print(f"{prefix}• {display_key}: {display_value}", flush=True)
