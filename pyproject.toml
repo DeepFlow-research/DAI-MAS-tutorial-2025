@@ -1,0 +1,24 @@
+[project]
+name = "dai_multi_agent_systems_demo"
+version = "0.1.0"
+description = "DAI 2025 Tutorial - Multi-Agent Systems Coding Demo Examples"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "openai>=2.8.1",
+    "openai-agents[litellm]>=0.5.1",
+    "litellm>=1.75.0",
+    "pydantic>=2.0.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.9.5",
+]

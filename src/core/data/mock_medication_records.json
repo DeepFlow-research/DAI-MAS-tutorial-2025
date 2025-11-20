@@ -1,0 +1,63 @@
+[
+  {
+    "record_id": "REC-12345",
+    "patient_id": "P001",
+    "medication": "Warfarin",
+    "dosage": 5.0,
+    "dosage_unit": "mg",
+    "route": "oral",
+    "administered_at": "2024-11-15T08:00:00Z",
+    "ward": "ICU",
+    "risk_level": "high",
+    "prescriber_id": "DOC-001"
+  },
+  {
+    "record_id": "REC-12346",
+    "patient_id": "P001",
+    "medication": "Metformin",
+    "dosage": 1000.0,
+    "dosage_unit": "mg",
+    "route": "oral",
+    "administered_at": "2024-11-15T09:00:00Z",
+    "ward": "ICU",
+    "risk_level": "medium",
+    "prescriber_id": "DOC-001"
+  },
+  {
+    "record_id": "REC-12347",
+    "patient_id": "P002",
+    "medication": "Aspirin",
+    "dosage": 81.0,
+    "dosage_unit": "mg",
+    "route": "oral",
+    "administered_at": "2024-11-15T10:00:00Z",
+    "ward": "ICU",
+    "risk_level": "low",
+    "prescriber_id": "DOC-002"
+  },
+  {
+    "record_id": "REC-12348",
+    "patient_id": "P003",
+    "medication": "Morphine",
+    "dosage": 12.0,
+    "dosage_unit": "mg",
+    "route": "IV",
+    "administered_at": "2024-11-15T11:00:00Z",
+    "ward": "ICU",
+    "risk_level": "critical",
+    "prescriber_id": "DOC-003"
+  },
+  {
+    "record_id": "REC-12349",
+    "patient_id": "P003",
+    "medication": "Furosemide",
+    "dosage": 40.0,
+    "dosage_unit": "mg",
+    "route": "IV",
+    "administered_at": "2024-11-15T12:00:00Z",
+    "ward": "ICU",
+    "risk_level": "high",
+    "prescriber_id": "DOC-003"
+  }
+]
+
