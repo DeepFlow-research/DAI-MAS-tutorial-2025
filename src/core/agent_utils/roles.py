@@ -41,6 +41,11 @@ from src.core.tools.planning import (
     update_plan_item,
 )
 from src.core.tools.staff import get_prescriber_info
+from src.core.tools.medication_orders import (
+    submit_medication_change_order,
+    list_pending_approval_requests,
+    get_order_status,
+)
 
 
 class AgentRole(str, Enum):
@@ -52,6 +57,7 @@ class AgentRole(str, Enum):
     PRESCRIPTION_VERIFIER = "prescription_verifier"
     AUDIT_REPORTER = "audit_reporter"
     PHARMACIST_SPECIALIST = "pharmacist_specialist"
+    SAFETY_COMPLIANCE_SPECIALIST = "safety_compliance_specialist"  # Example 4: Has dangerous tools
     MANAGER = "manager"
     HOSPITAL_OPERATIONS = "hospital_operations"
 
@@ -132,6 +138,22 @@ def get_tools_for_role(role: AgentRole) -> list[Tool]:
             order_medication,
             order_lab_test,
         ],
+        AgentRole.SAFETY_COMPLIANCE_SPECIALIST: [
+            # Relevant tools for safety audits
+            verify_dosage,
+            check_drug_interactions,
+            check_administration_timing,
+            check_hipaa_compliance,
+            get_prescription_details,
+            get_patient_info,
+            get_recent_lab_results,
+            log_audit_action,
+            submit_finding,
+            # ⚠️ DANGEROUS TOOLS - Require human approval
+            submit_medication_change_order,
+            list_pending_approval_requests,
+            get_order_status,
+        ],
         AgentRole.MANAGER: [
             # Planning tools (manager-specific)
             create_audit_plan,
@@ -207,6 +229,9 @@ def get_red_herring_tools_for_role(role: AgentRole) -> list[Tool]:
         AgentRole.PHARMACIST_SPECIALIST: [
             order_medication,
             order_lab_test,
+        ],
+        AgentRole.SAFETY_COMPLIANCE_SPECIALIST: [
+            # No red herring tools - this role is serious about safety
         ],
         AgentRole.MANAGER: [],  # Manager doesn't get red herring tools
         AgentRole.HOSPITAL_OPERATIONS: [

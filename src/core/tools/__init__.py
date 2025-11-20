@@ -38,6 +38,14 @@ from .planning import (
     list_plans,
     update_plan_item,
 )
+from .medication_orders import (
+    MedicationChangeOrder,
+    OrderSubmissionResult,
+    ApprovalRequest,
+    submit_medication_change_order,
+    list_pending_approval_requests,
+    get_order_status,
+)
 
 __all__ = [
     # Medication records
@@ -73,4 +81,11 @@ __all__ = [
     "update_plan_item",
     "get_plan_status",
     "list_plans",
+    # Medication orders (DANGEROUS TOOLS - require human approval)
+    "MedicationChangeOrder",
+    "OrderSubmissionResult",
+    "ApprovalRequest",
+    "submit_medication_change_order",
+    "list_pending_approval_requests",
+    "get_order_status",
 ]

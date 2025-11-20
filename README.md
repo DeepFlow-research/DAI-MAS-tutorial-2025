@@ -10,7 +10,7 @@ Five progressive examples showing the evolution from a simple single-agent syste
 - **Example 1**: Hierarchical decomposition - manager coordinates multiple worker agents (3-5 workers)
 - **Example 2**: Ad hoc teaming - pharmacist specialist joins mid-audit
 - **Example 3**: Multi-objective preferences - event-driven priority adaptation with crisis response
-- **Example 4**: Safety & governance - HIPAA compliance, approval workflows, audit trails
+- **Example 4**: Safety & governance - human-in-the-loop for dangerous actions (⚠️ includes dangerous tool demonstration)
 
 ## Domain: Healthcare Medication Safety Audit
 
@@ -55,7 +55,7 @@ python -m src.examples.example_2.main
 # Example 3: Multi-objective preferences
 python -m src.examples.example_3.main
 
-# Example 4: Safety & governance (when implemented)
+# Example 4: Safety & governance with human-in-the-loop ⚠️
 python -m src.examples.example_4.main
 ```
 
@@ -78,7 +78,11 @@ coding_demo_examples/
 │   │   │   │   └── planning.py          # Crisis-aware planning tools
 │   │   │   └── resources/               # Example-3 specific resources
 │   │   │       └── audit_context.py     # Shared AuditContext
-│   │   └── example_4/                   # Safety & governance (when implemented)
+│   │   └── example_4/                   # Safety & governance (human-in-the-loop)
+│   │       └── data/                    # Example-4 specific mock data
+│   │           ├── example_4_medication_records.json  # Safety-critical scenarios
+│   │           ├── example_4_prescriptions.py         # Prescription discrepancies
+│   │           └── example_4_patients.py              # Patient clinical context
 │   ├── core/                            # Shared utilities
 │   │   ├── agent_utils/                 # Agent creation utilities
 │   │   │   ├── base.py                  # create_agent, create_manager_agent
@@ -86,14 +90,15 @@ coding_demo_examples/
 │   │   │   └── streaming.py             # Streaming output utilities
 │   │   ├── tools/                       # Shared tool implementations
 │   │   │   ├── planning.py              # Core planning tools
+│   │   │   ├── medication_orders.py     # ⚠️ Dangerous tool: propose medication changes
 │   │   │   ├── medication_records.py    # Medication record access
 │   │   │   ├── patient_data.py          # Patient information
 │   │   │   ├── prescriptions.py         # Prescription verification
 │   │   │   ├── administration.py        # Administration timing
 │   │   │   ├── inventory.py             # Medication inventory
 │   │   │   ├── lab_results.py           # Lab results access
-│   │   │   ├── compliance.py            # Compliance checking
-│   │   │   ├── reporting.py             # Audit reporting
+│   │   │   ├── compliance_rules.py      # Compliance checking
+│   │   │   ├── audit_reporting.py       # Audit reporting
 │   │   │   └── red_herring/             # Irrelevant tools (for testing)
 │   │   │       ├── scheduling.py        # Staff scheduling
 │   │   │       ├── billing.py           # Billing information
@@ -120,7 +125,18 @@ Each example builds on the previous, revealing limitations that drive the progre
 1. **Example 0 → 1**: Scale failure - single agent can't handle volume (5 records)
 2. **Example 1 → 2**: Static team failure - can't integrate new specialists mid-execution
 3. **Example 2 → 3**: Preference failure - can't balance competing objectives or adapt to crises
-4. **Example 3 → 4**: Governance failure - preferences may override safety protocols
+4. **Example 3 → 4**: Safety failure - agents want to take dangerous actions requiring human oversight
+
+## ⚠️ Human-in-the-Loop Demonstration (Example 4)
+
+Example 4 includes a **dangerous tool demonstration** showing why AI agents need human oversight in high-stakes domains:
+
+- **The Tool**: `submit_medication_change_order` - allows agents to propose medication changes
+- **Why Dangerous**: Direct patient safety impact; AI lacks full clinical context
+- **The Safety**: ALL orders blocked pending human approval; complete audit trail
+- **The Lesson**: AI + Human oversight safer than either alone
+
+See [`src/examples/example_4/README.md`](src/examples/example_4/README.md) for the full scenario and [`src/core/tools/medication_orders.py`](src/core/tools/medication_orders.py) for implementation.
 
 See [src/examples/README.md](src/examples/README.md) for detailed progression and learnings.
 

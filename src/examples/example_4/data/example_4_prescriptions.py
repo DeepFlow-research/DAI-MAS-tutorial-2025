@@ -1,0 +1,106 @@
+"""Example 4-specific prescription data with safety issues."""
+
+from src.core.tools.prescriptions import PrescriptionDetails
+
+# Mock prescription database for Example 4
+# Key difference: Patient P-67890 is prescribed 5mg Warfarin but receiving 10mg
+EXAMPLE_4_PRESCRIPTIONS: dict[tuple[str, str], PrescriptionDetails] = {
+    # Patient P-67890: PRESCRIBED 5mg but RECEIVING 10mg (double dosing issue)
+    ("Warfarin", "P-67890"): PrescriptionDetails(
+        prescription_id="PRES-EX4-001",
+        patient_id="P-67890",
+        medication="Warfarin",
+        dosage=5.0,  # ← PRESCRIBED 5mg
+        dosage_unit="mg",
+        frequency="once daily",
+        route="oral",
+        start_date="2024-11-01",
+        end_date=None,
+        prescriber_id="DOC-005",
+        status="active",
+        notes="Standard warfarin protocol for atrial fibrillation",
+    ),
+    ("Metformin", "P-67890"): PrescriptionDetails(
+        prescription_id="PRES-EX4-002",
+        patient_id="P-67890",
+        medication="Metformin",
+        dosage=1000.0,
+        dosage_unit="mg",
+        frequency="twice daily",
+        route="oral",
+        start_date="2024-10-15",
+        end_date=None,
+        prescriber_id="DOC-005",
+        status="active",
+    ),
+    # Patient P-67891: On both Warfarin and Ibuprofen (drug interaction)
+    ("Warfarin", "P-67891"): PrescriptionDetails(
+        prescription_id="PRES-EX4-003",
+        patient_id="P-67891",
+        medication="Warfarin",
+        dosage=5.0,
+        dosage_unit="mg",
+        frequency="once daily",
+        route="oral",
+        start_date="2024-11-10",
+        end_date=None,
+        prescriber_id="DOC-006",
+        status="active",
+    ),
+    ("Ibuprofen", "P-67891"): PrescriptionDetails(
+        prescription_id="PRES-EX4-004",
+        patient_id="P-67891",
+        medication="Ibuprofen",
+        dosage=400.0,
+        dosage_unit="mg",
+        frequency="every 6 hours as needed",
+        route="oral",
+        start_date="2024-11-17",
+        end_date=None,
+        prescriber_id="DOC-006",
+        status="active",
+        notes="For pain management - CAUTION: Patient also on warfarin",
+    ),
+    ("Lisinopril", "P-67891"): PrescriptionDetails(
+        prescription_id="PRES-EX4-005",
+        patient_id="P-67891",
+        medication="Lisinopril",
+        dosage=10.0,
+        dosage_unit="mg",
+        frequency="once daily",
+        route="oral",
+        start_date="2024-10-01",
+        end_date=None,
+        prescriber_id="DOC-006",
+        status="active",
+    ),
+    # Patient P-67892: Prescribed Amoxicillin (has penicillin allergy)
+    ("Amoxicillin", "P-67892"): PrescriptionDetails(
+        prescription_id="PRES-EX4-006",
+        patient_id="P-67892",
+        medication="Amoxicillin",
+        dosage=500.0,
+        dosage_unit="mg",
+        frequency="three times daily",
+        route="oral",
+        start_date="2024-11-18",
+        end_date="2024-11-25",
+        prescriber_id="DOC-007",
+        status="active",
+        notes="For bacterial infection - ALERT: Check allergies before administration!",
+    ),
+    ("Insulin", "P-67892"): PrescriptionDetails(
+        prescription_id="PRES-EX4-007",
+        patient_id="P-67892",
+        medication="Insulin",
+        dosage=10.0,
+        dosage_unit="units",
+        frequency="before meals",
+        route="subcutaneous",
+        start_date="2024-09-01",
+        end_date=None,
+        prescriber_id="DOC-007",
+        status="active",
+    ),
+}
+
