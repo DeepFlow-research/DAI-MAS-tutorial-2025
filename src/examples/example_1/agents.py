@@ -6,11 +6,10 @@ from src.core.agent_utils.roles import AgentRole
 
 def create_team():
     """Create the team of agents for Example 1."""
-    # Medication Records Specialists (4 instances)
-    medication_specialists = [
-        create_agent(
-            name=f"Medication Records Specialist {i + 1}",
-            instructions="""You are a medication records specialist. Your role is to:
+    # Medication Records Specialist (1 instance)
+    medication_specialist = create_agent(
+        name="Medication Records Specialist",
+        instructions="""You are a medication records specialist. Your role is to:
 1. Fetch medication administration records by ID, ward, or priority
 2. Check medication availability in inventory
 3. Cross-reference records with patient information
@@ -29,17 +28,14 @@ When you receive a handoff from the Audit Manager Agent:
 
 Do NOT just acknowledge the handoff - you MUST actually execute tools and complete the assigned task before handing back.
 If you need to pass work to another specialist agent, you may hand off to them, but they should then hand back to the manager.""",
-            role=AgentRole.MEDICATION_RECORDS_SPECIALIST,
-            model=STRONG_MODEL,
-        )
-        for i in range(4)
-    ]
+        role=AgentRole.MEDICATION_RECORDS_SPECIALIST,
+        model=STRONG_MODEL,
+    )
 
-    # Patient Data Specialists (2 instances)
-    patient_specialists = [
-        create_agent(
-            name=f"Patient Data Specialist {i + 1}",
-            instructions="""You are a patient data specialist. Your role is to:
+    # Patient Data Specialist (1 instance)
+    patient_specialist = create_agent(
+        name="Patient Data Specialist",
+        instructions="""You are a patient data specialist. Your role is to:
 1. Retrieve comprehensive patient information
 2. Access recent lab results
 3. Verify administration timing with patient context
@@ -58,17 +54,14 @@ When you receive a handoff from the Audit Manager Agent:
 
 Do NOT just acknowledge the handoff - you MUST actually execute tools and complete the assigned task before handing back.
 If you need to pass work to another specialist agent, you may hand off to them, but they should then hand back to the manager.""",
-            role=AgentRole.PATIENT_DATA_SPECIALIST,
-            model=STRONG_MODEL,
-        )
-        for i in range(2)
-    ]
+        role=AgentRole.PATIENT_DATA_SPECIALIST,
+        model=STRONG_MODEL,
+    )
 
-    # Compliance Auditors (2 instances)
-    compliance_auditors = [
-        create_agent(
-            name=f"Compliance Auditor {i + 1}",
-            instructions="""You are a compliance auditor. Your role is to:
+    # Compliance Auditor (1 instance)
+    compliance_auditor = create_agent(
+        name="Compliance Auditor",
+        instructions="""You are a compliance auditor. Your role is to:
 1. Verify medication dosages against prescriptions
 2. Check for drug interactions
 3. Verify administration timing compliance
@@ -89,11 +82,9 @@ When you receive a handoff from the Audit Manager Agent:
 
 Do NOT just acknowledge the handoff - you MUST actually execute tools and complete the assigned task before handing back.
 If you need to pass work to another specialist agent, you may hand off to them, but they should then hand back to the manager.""",
-            role=AgentRole.COMPLIANCE_AUDITOR,
-            model=STRONG_MODEL,
-        )
-        for i in range(2)
-    ]
+        role=AgentRole.COMPLIANCE_AUDITOR,
+        model=STRONG_MODEL,
+    )
 
     # Prescription Verifier (1 instance)
     prescription_verifier = create_agent(
@@ -150,21 +141,22 @@ If you need to pass work to another specialist agent, you may hand off to them, 
     )
 
     # Create manager agent
-    all_workers = (
-        medication_specialists
-        + patient_specialists
-        + compliance_auditors
-        + [prescription_verifier, audit_reporter]
-    )
+    all_workers = [
+        medication_specialist,
+        patient_specialist,
+        compliance_auditor,
+        prescription_verifier,
+        audit_reporter,
+    ]
 
     manager = create_manager_agent(
         name="Audit Manager Agent",
         instructions="""You are a medication audit manager coordinating a team of specialized agents.
 
 Your team consists of:
-- Medication Records Specialists (1-4): Fetch and organize medication records
-- Patient Data Specialists (1-2): Retrieve patient information and lab results
-- Compliance Auditors (1-2): Verify dosages, interactions, timing, and HIPAA compliance
+- Medication Records Specialist: Fetch and organize medication records
+- Patient Data Specialist: Retrieve patient information and lab results
+- Compliance Auditor: Verify dosages, interactions, timing, and HIPAA compliance
 - Prescription Verifier: Verify prescriptions and prescriber credentials
 - Audit Reporter: Generate final audit reports
 
@@ -191,9 +183,9 @@ IMPORTANT: You can only hand off to ONE agent at a time. To coordinate multiple 
 - Continue this pattern to coordinate the team
 
 When delegating, match tasks to agents with the right tools. For example:
-- Medication record fetching → Hand off to ONE Medication Records Specialist
-- Patient data lookups → Hand off to ONE Patient Data Specialist
-- Compliance checks → Hand off to ONE Compliance Auditor
+- Medication record fetching → Hand off to Medication Records Specialist
+- Patient data lookups → Hand off to Patient Data Specialist
+- Compliance checks → Hand off to Compliance Auditor
 - Prescription verification → Hand off to Prescription Verifier
 - Report generation → Hand off to Audit Reporter
 
