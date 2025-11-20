@@ -2,7 +2,7 @@
 
 This repository contains progressive coding examples demonstrating how manager agents become essential as system complexity increases in multi-agent systems.
 
-Part of the tutorial [LLM-based Multi-Agent Systems: Foundations and Practice](https://sites.google.com/view/lamas-2025-dai-25) given by the DeepFlow team at the Distributed AI Conference in London, November 2025.
+Part of the tutorial [LLM-based Multi-Agent Systems: Foundations and Practice](https://sites.google.com/view/lamas-2025-dai-25) given by the [DeepFlow](https://www.deepflow.com/) team at the Distributed AI Conference in London, November 2025.
 
 ## Overview
 
