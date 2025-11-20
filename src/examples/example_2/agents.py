@@ -1,7 +1,12 @@
 """Agent definitions for Example 2."""
 
-from src.core.agent_utils.base import STRONG_MODEL, create_agent, create_manager_agent
-from src.core.agent_utils.roles import AgentRole
+from agents import Agent, ModelSettings
+from agents.extensions.models.litellm_model import LitellmModel
+
+from src.core.agent_utils.base import STRONG_MODEL, create_agent
+from src.core.agent_utils.roles import AgentRole, get_tools_for_role
+from src.examples.example_2.hooks import PharmacistAvailabilityHook
+from src.examples.example_2.tools.pharmacist_availability import check_pharmacist_availability
 
 
 def create_team():
@@ -190,7 +195,12 @@ If you need to pass work to another specialist agent, you may hand off to them, 
         + [prescription_verifier, audit_reporter]
     )
 
-    manager = create_manager_agent(
+    # Get manager tools and add pharmacist availability check
+    manager_tools = get_tools_for_role(AgentRole.MANAGER) + [check_pharmacist_availability]
+
+    # Create manager agent with hooks for validation
+    manager = Agent(
+        model=LitellmModel(model=STRONG_MODEL),
         name="Audit Manager Agent",
         instructions="""You are a medication audit manager coordinating a team of specialized agents.
 
@@ -201,21 +211,31 @@ Your initial team consists of:
 - Prescription Verifier: Verify prescriptions and prescriber credentials
 - Audit Reporter: Generate final audit reports
 
-IMPORTANT: A Pharmacist Specialist has just become available mid-audit.
-This specialist has deep expertise in drug interactions and can analyze complex cases
+CRITICAL: A Pharmacist Specialist may become available mid-audit, but you MUST check their availability first.
+
+PHARMACIST AVAILABILITY PROTOCOL:
+- You have access to a tool called check_pharmacist_availability
+- You MUST call this tool BEFORE attempting to hand off to the Pharmacist Specialist
+- If the tool returns False, the pharmacist is NOT available and you CANNOT hand off to them
+- If the tool returns True, the pharmacist IS available and you may hand off to them
+- You MUST NOT hand off to the Pharmacist Specialist unless check_pharmacist_availability has returned True
+- You may check availability multiple times during the audit (availability may change)
+
+The Pharmacist Specialist has deep expertise in drug interactions and can analyze complex cases
 using lab results and specialized knowledge.
 
 Your role is to:
 1. Break down complex audit tasks into sub-tasks
 2. Delegate work to appropriate specialist agents based on their capabilities
-3. ONBOARD the new Pharmacist Specialist:
+3. Check pharmacist availability using check_pharmacist_availability before delegating to them
+4. If pharmacist is available, ONBOARD them:
    - Provide them with current audit context (what's been done, what's pending)
    - Explain the audit scope and objectives
    - Redistribute complex drug interaction cases to leverage their expertise
-4. Hand off to ONE agent at a time (handoffs are sequential, not parallel)
-5. After receiving results from one agent, hand off to the next agent for the next sub-task
-6. Aggregate results from all worker agents as they complete their tasks
-7. Ensure comprehensive coverage of all audit requirements
+5. Hand off to ONE agent at a time (handoffs are sequential, not parallel)
+6. After receiving results from one agent, hand off to the next agent for the next sub-task
+7. Aggregate results from all worker agents as they complete their tasks
+8. Ensure comprehensive coverage of all audit requirements
 
 IMPORTANT: You can only hand off to ONE agent at a time. To coordinate multiple agents:
 - Hand off to Agent 1 for Task A, wait for results
@@ -227,8 +247,20 @@ should handle complex drug interaction analysis, especially cases involving mult
 medications or requiring lab result interpretation.
 
 Use handoffs to delegate tasks sequentially. You can achieve parallelism by breaking work into independent sub-tasks and delegating them one at a time.""",
-        worker_agents=initial_team + [pharmacist_specialist],  # Include new agent
-        model=STRONG_MODEL,
+        tools=manager_tools,
+        handoffs=list(initial_team) + [pharmacist_specialist],
+        model_settings=ModelSettings(parallel_tool_calls=True),
+        hooks=PharmacistAvailabilityHook(),
     )
+
+    # Enable bidirectional handoffs: workers can hand back to manager
+    # Attach hooks to all agents to validate pharmacist handoffs
+    hook = PharmacistAvailabilityHook()
+    manager.hooks = hook  # type: ignore
+    
+    all_agents = [manager] + list(initial_team) + [pharmacist_specialist]
+    for worker in initial_team + [pharmacist_specialist]:
+        worker.handoffs = all_agents  # type: ignore
+        worker.hooks = hook  # type: ignore
 
     return manager
