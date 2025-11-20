@@ -5,6 +5,10 @@ import json
 from typing import TYPE_CHECKING, Any
 
 from agents import RunResultStreaming
+from rich.console import Console
+
+# Create a console instance for rich output
+console = Console()
 
 if TYPE_CHECKING:
     from openai.types.responses import (
@@ -50,7 +54,10 @@ async def stream_agent_output(runner: RunResultStreaming, context: Any = None) -
             # Handle agent updated events (handoffs)
             elif hasattr(event, "type") and event.type == "agent_updated_stream_event":
                 if hasattr(event, "new_agent") and event.new_agent:
-                    print(f"\n👤 [Agent: {event.new_agent.name}]\n", flush=True)
+                    console.print(
+                        f"\n👤 [Agent: {event.new_agent.name}]\n",
+                        style="bold cyan",
+                    )
 
     finally:
         # Ensure all events are consumed and allow cleanup
@@ -98,30 +105,30 @@ async def _handle_raw_response_event(
     # Handle text deltas (streaming text)
     if isinstance(data, ResponseTextDeltaEvent):
         if hasattr(data, "delta") and data.delta:
+            text_chunk = None
+            
             # Check if delta is a string (as suggested by type error)
             if isinstance(data.delta, str):
-                text = data.delta
-                if text.isprintable() or text.isspace():
-                    print(text, end="", flush=True)
+                text_chunk = data.delta
             # Fallback for object-like delta
             elif hasattr(data.delta, "text") and data.delta.text:
-                # Only print printable text to avoid encoding issues
-                text = data.delta.text
-                if text.isprintable() or text.isspace():
-                    print(text, end="", flush=True)
-
+                text_chunk = data.delta.text
             elif hasattr(data.delta, "content") and data.delta.content:
-                content = data.delta.content
-                if content.isprintable() or content.isspace():
-                    print(content, end="", flush=True)
+                text_chunk = data.delta.content
+            
+            # Print streaming text
+            if text_chunk and (text_chunk.isprintable() or text_chunk.isspace()):
+                console.print(text_chunk, end="")
 
     # Handle tool call start (function call added) - store for later matching
     elif isinstance(data, ResponseOutputItemAddedEvent):
         if hasattr(data, "item") and isinstance(data.item, ResponseFunctionToolCall):
             tool_call = data.item
+            
             tool_name = getattr(tool_call, "name", None)
-            tool_id = getattr(tool_call, "id", None) or getattr(
-                tool_call, "call_id", None
+            # Prefer call_id over id (id might be __fake_id__)
+            tool_id = getattr(tool_call, "call_id", None) or getattr(
+                tool_call, "id", None
             )
 
             if tool_name:
@@ -141,7 +148,7 @@ async def _handle_raw_response_event(
                 display_name = " ".join(
                     word.capitalize() for word in tool_name.split("_")
                 )
-                print(f"\n🔧 Calling: {display_name}", flush=True)
+                console.print(f"\n🔧 Calling: {display_name}", style="bold yellow")
 
                 # Show arguments if available
                 if hasattr(tool_call, "arguments") and tool_call.arguments:
@@ -152,11 +159,11 @@ async def _handle_raw_response_event(
                             else tool_call.arguments
                         )
                         if args_dict:
-                            print("   Parameters:", flush=True)
+                            console.print("   Parameters:")
                             for key, value in args_dict.items():
-                                print(f"     • {key}: {value}", flush=True)
+                                console.print(f"     • {key}: {value}")
                     except (json.JSONDecodeError, TypeError):
-                        print(f"   Parameters: {tool_call.arguments}", flush=True)
+                        console.print(f"   Parameters: {tool_call.arguments}")
 
     # Handle tool call completion (function call done) - we'll show result when it arrives
     elif isinstance(data, ResponseOutputItemDoneEvent):
@@ -181,21 +188,54 @@ async def _handle_run_item_event(
         tool_name: str | None = None
         tool_id: str | None = None
 
-        # Try to get tool call ID to match with pending calls
-        if hasattr(item, "tool_call_id"):
-            tool_id = item.tool_call_id
-        elif hasattr(item, "call_id"):
-            tool_id = item.call_id
-        elif hasattr(item, "id"):
-            tool_id = item.id
+        # Try to extract from raw_item if available
+        raw_item = getattr(item, "raw_item", None)
+        if raw_item:
+            # If raw_item is a dict, try to get values from it
+            if isinstance(raw_item, dict):
+                tool_id = (
+                    raw_item.get("tool_call_id") 
+                    or raw_item.get("call_id") 
+                    or raw_item.get("id")
+                )
+                tool_name = (
+                    raw_item.get("name") 
+                    or raw_item.get("tool_name") 
+                    or raw_item.get("function_name")
+                )
+            # Otherwise check as object attributes
+            else:
+                if hasattr(raw_item, "tool_call_id"):
+                    tool_id = raw_item.tool_call_id
+                elif hasattr(raw_item, "call_id"):
+                    tool_id = raw_item.call_id
+                elif hasattr(raw_item, "id"):
+                    tool_id = raw_item.id
+                
+                # Check raw_item for tool name
+                if hasattr(raw_item, "name"):
+                    tool_name = raw_item.name
+                elif hasattr(raw_item, "tool_name"):
+                    tool_name = raw_item.tool_name
+                elif hasattr(raw_item, "function_name"):
+                    tool_name = raw_item.function_name
+        
+        # Fallback to direct item attributes
+        if not tool_id:
+            if hasattr(item, "tool_call_id"):
+                tool_id = item.tool_call_id
+            elif hasattr(item, "call_id"):
+                tool_id = item.call_id
+            elif hasattr(item, "id"):
+                tool_id = item.id
 
-        # Try to get tool name
-        if hasattr(item, "name"):
-            tool_name = item.name
-        elif hasattr(item, "tool_name"):
-            tool_name = item.tool_name
-        elif hasattr(item, "function_name"):
-            tool_name = item.function_name
+        if not tool_name:
+            if hasattr(item, "name"):
+                tool_name = item.name
+            elif hasattr(item, "tool_name"):
+                tool_name = item.tool_name
+            elif hasattr(item, "function_name"):
+                tool_name = item.function_name
 
         # Try to match with pending call by ID first, then by name
         matched_call = None
@@ -210,22 +250,24 @@ async def _handle_run_item_event(
                 if call_info.get("name") == tool_name:
                     matched_call = pending_tool_calls.pop(call_id)
                     break
+        
+        # If we still don't have a tool name but have pending calls, try to match by position
+        if not tool_name and pending_tool_calls:
+            # Pop the first pending call (FIFO order)
+            first_id = next(iter(pending_tool_calls))
+            matched_call = pending_tool_calls.pop(first_id)
+            tool_name = matched_call.get("name")
 
         output = item.output
 
-        # Show result immediately after the tool call (or standalone if no match)
-        if matched_call:
-            # We already showed the tool call, now show the result right after
-            print("\n✓ Result:", flush=True)
+        # Show result with tool name
+        if tool_name:
+            display_name = " ".join(
+                word.capitalize() for word in tool_name.split("_")
+            )
+            console.print(f"\n✓ Result - {display_name}:", style="bold green")
         else:
-            # No matching call found, show tool name if available
-            if tool_name:
-                display_name = " ".join(
-                    word.capitalize() for word in tool_name.split("_")
-                )
-                print(f"\n✓ {display_name} Result:", flush=True)
-            else:
-                print("\n✓ Result:", flush=True)
+            console.print("\n✓ Result:", style="bold green")
 
         # Format output based on type
         if isinstance(output, dict):
@@ -237,23 +279,23 @@ async def _handle_run_item_event(
         elif isinstance(output, list):
             # List output
             if len(output) == 0:
-                print("   (empty list)", flush=True)
+                console.print("   (empty list)")
             else:
                 for i, output_item in enumerate(output[:10], 1):  # Show first 10 items
-                    print(f"   {i}. {output_item}", flush=True)
+                    console.print(f"   {i}. {output_item}")
                 if len(output) > 10:
-                    print(f"   ... and {len(output) - 10} more items", flush=True)
+                    console.print(f"   ... and {len(output) - 10} more items", style="italic")
         elif isinstance(output, str):
             # String output - check if it's an error
             if "error" in output.lower() or "Error:" in output:
-                print(f"   ⚠ Error: {output}", flush=True)
+                console.print(f"   ⚠ Error: {output}", style="bold red")
             else:
                 output_str = output[:500] + ("..." if len(output) > 500 else "")
-                print(f"   {output_str}", flush=True)
+                console.print(f"   {output_str}")
         else:
             output_str = str(output)
             truncated = output_str[:500] + ("..." if len(output_str) > 500 else "")
-            print(f"   {truncated}", flush=True)
+            console.print(f"   {truncated}")
 
 
 def _print_dict_nicely(data: dict, indent: int = 0, max_depth: int = 3) -> None:

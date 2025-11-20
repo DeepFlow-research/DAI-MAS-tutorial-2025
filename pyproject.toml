@@ -9,6 +9,7 @@ dependencies = [
     "openai-agents[litellm]>=0.5.1",
     "litellm>=1.75.0",
     "pydantic>=2.0.0",
+    "rich>=13.0.0",
 ]
 
 [build-system]
