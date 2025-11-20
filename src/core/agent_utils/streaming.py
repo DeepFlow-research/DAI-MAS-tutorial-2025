@@ -4,7 +4,7 @@ import asyncio
 import json
 from typing import TYPE_CHECKING, Any
 
-from agents import RunResultStreaming
+from agents import Agent, RunResultStreaming
 from rich.console import Console
 
 # Create a console instance for rich output
@@ -18,7 +18,9 @@ if TYPE_CHECKING:
     )
 
 
-async def stream_agent_output(runner: RunResultStreaming, context: Any = None) -> None:
+async def stream_agent_output(
+    runner: RunResultStreaming, context: Any = None
+) -> Agent[Any] | None:
     """
     Simplified event handler that displays:
     - Streaming text/thinking from the agent
@@ -35,6 +37,7 @@ async def stream_agent_output(runner: RunResultStreaming, context: Any = None) -
     """
     # Track pending tool calls by their ID to match with results
     pending_tool_calls: dict[str, dict[str, Any]] = {}
+    final_agent: Agent[Any] | None = None
 
     try:
         # Consume all events from the async generator
@@ -54,10 +57,17 @@ async def stream_agent_output(runner: RunResultStreaming, context: Any = None) -
             # Handle agent updated events (handoffs)
             elif hasattr(event, "type") and event.type == "agent_updated_stream_event":
                 if hasattr(event, "new_agent") and event.new_agent:
+                    final_agent = event.new_agent
                     console.print(
                         f"\n👤 [Agent: {event.new_agent.name}]\n",
                         style="bold magenta",
                     )
+
+        # Try to get final agent from runner if available
+        if final_agent is None and hasattr(runner, "current_agent"):
+            final_agent = runner.current_agent
+        elif final_agent is None and hasattr(runner, "agent"):
+            final_agent = runner.agent
 
     finally:
         # Ensure all events are consumed and allow cleanup
@@ -80,6 +90,8 @@ async def stream_agent_output(runner: RunResultStreaming, context: Any = None) -
                             client.close()
                     except (AttributeError, TypeError, RuntimeError):
                         pass
+
+    return final_agent
 
 
 async def _handle_raw_response_event(
@@ -106,7 +118,7 @@ async def _handle_raw_response_event(
     if isinstance(data, ResponseTextDeltaEvent):
         if hasattr(data, "delta") and data.delta:
             text_chunk = None
-            
+
             # Check if delta is a string (as suggested by type error)
             if isinstance(data.delta, str):
                 text_chunk = data.delta
@@ -115,7 +127,7 @@ async def _handle_raw_response_event(
                 text_chunk = data.delta.text
             elif hasattr(data.delta, "content") and data.delta.content:
                 text_chunk = data.delta.content
-            
+
             # Print streaming text
             if text_chunk and (text_chunk.isprintable() or text_chunk.isspace()):
                 console.print(text_chunk, end="")
@@ -124,7 +136,7 @@ async def _handle_raw_response_event(
     elif isinstance(data, ResponseOutputItemAddedEvent):
         if hasattr(data, "item") and isinstance(data.item, ResponseFunctionToolCall):
             tool_call = data.item
-            
+
             tool_name = getattr(tool_call, "name", None)
             # Prefer call_id over id (id might be __fake_id__)
             tool_id = getattr(tool_call, "call_id", None) or getattr(
@@ -163,7 +175,9 @@ async def _handle_raw_response_event(
                             for key, value in args_dict.items():
                                 console.print(f"     • {key}: {value}", style="dim")
                     except (json.JSONDecodeError, TypeError):
-                        console.print(f"   Parameters: {tool_call.arguments}", style="dim")
+                        console.print(
+                            f"   Parameters: {tool_call.arguments}", style="dim"
+                        )
 
     # Handle tool call completion (function call done) - we'll show result when it arrives
     elif isinstance(data, ResponseOutputItemDoneEvent):
@@ -194,13 +208,13 @@ async def _handle_run_item_event(
             # If raw_item is a dict, try to get values from it
             if isinstance(raw_item, dict):
                 tool_id = (
-                    raw_item.get("tool_call_id") 
-                    or raw_item.get("call_id") 
+                    raw_item.get("tool_call_id")
+                    or raw_item.get("call_id")
                     or raw_item.get("id")
                 )
                 tool_name = (
-                    raw_item.get("name") 
-                    or raw_item.get("tool_name") 
+                    raw_item.get("name")
+                    or raw_item.get("tool_name")
                     or raw_item.get("function_name")
                 )
             # Otherwise check as object attributes
@@ -211,7 +225,7 @@ async def _handle_run_item_event(
                     tool_id = raw_item.call_id
                 elif hasattr(raw_item, "id"):
                     tool_id = raw_item.id
-                
+
                 # Check raw_item for tool name
                 if hasattr(raw_item, "name"):
                     tool_name = raw_item.name
@@ -219,7 +233,7 @@ async def _handle_run_item_event(
                     tool_name = raw_item.tool_name
                 elif hasattr(raw_item, "function_name"):
                     tool_name = raw_item.function_name
-        
+
         # Fallback to direct item attributes
         if not tool_id:
             if hasattr(item, "tool_call_id"):
@@ -250,7 +264,7 @@ async def _handle_run_item_event(
                 if call_info.get("name") == tool_name:
                     matched_call = pending_tool_calls.pop(call_id)
                     break
-        
+
         # If we still don't have a tool name but have pending calls, try to match by position
         if not tool_name and pending_tool_calls:
             # Pop the first pending call (FIFO order)
@@ -262,9 +276,7 @@ async def _handle_run_item_event(
 
         # Show result with tool name
         if tool_name:
-            display_name = " ".join(
-                word.capitalize() for word in tool_name.split("_")
-            )
+            display_name = " ".join(word.capitalize() for word in tool_name.split("_"))
             console.print(f"\n✓ Result - {display_name}:", style="bold green")
         else:
             console.print("\n✓ Result:", style="bold green")
@@ -275,7 +287,9 @@ async def _handle_run_item_event(
             _print_dict_nicely(output, indent=2, max_depth=3, is_first_key=True)
         elif hasattr(output, "model_dump"):
             # Pydantic model
-            _print_dict_nicely(output.model_dump(), indent=2, max_depth=3, is_first_key=True)
+            _print_dict_nicely(
+                output.model_dump(), indent=2, max_depth=3, is_first_key=True
+            )
         elif isinstance(output, list):
             # List output
             if len(output) == 0:
@@ -284,7 +298,9 @@ async def _handle_run_item_event(
                 for i, output_item in enumerate(output[:10], 1):  # Show first 10 items
                     console.print(f"   {i}. {output_item}")
                 if len(output) > 10:
-                    console.print(f"   ... and {len(output) - 10} more items", style="dim italic")
+                    console.print(
+                        f"   ... and {len(output) - 10} more items", style="dim italic"
+                    )
         elif isinstance(output, str):
             # String output - check if it's an error
             if "error" in output.lower() or "Error:" in output:
@@ -298,7 +314,9 @@ async def _handle_run_item_event(
             console.print(f"   {truncated}")
 
 
-def _print_dict_nicely(data: dict, indent: int = 0, max_depth: int = 3, is_first_key: bool = True) -> None:
+def _print_dict_nicely(
+    data: dict, indent: int = 0, max_depth: int = 3, is_first_key: bool = True
+) -> None:
     """
     Print a dictionary in a more readable format for demos.
 
@@ -319,7 +337,7 @@ def _print_dict_nicely(data: dict, indent: int = 0, max_depth: int = 3, is_first
         display_key = " ".join(
             word.capitalize() for word in str(key).replace("_", " ").split()
         )
-        
+
         # Color the first key for visual separation
         is_current_first = is_first_key and not first_key_processed
         first_key_processed = True
@@ -329,7 +347,9 @@ def _print_dict_nicely(data: dict, indent: int = 0, max_depth: int = 3, is_first
                 console.print(f"{prefix}• {display_key}:", style="bold cyan")
             else:
                 print(f"{prefix}• {display_key}:", flush=True)
-            _print_dict_nicely(value, indent=indent + 2, max_depth=max_depth, is_first_key=False)
+            _print_dict_nicely(
+                value, indent=indent + 2, max_depth=max_depth, is_first_key=False
+            )
         elif isinstance(value, list):
             if is_current_first:
                 console.print(f"{prefix}• {display_key}:", style="bold cyan")
@@ -340,16 +360,29 @@ def _print_dict_nicely(data: dict, indent: int = 0, max_depth: int = 3, is_first
             elif len(value) <= 25:
                 for item in value:
                     if isinstance(item, dict):
-                        _print_dict_nicely(item, indent=indent + 2, max_depth=max_depth, is_first_key=True)
+                        _print_dict_nicely(
+                            item,
+                            indent=indent + 2,
+                            max_depth=max_depth,
+                            is_first_key=True,
+                        )
                     else:
                         print(f"{prefix}  - {item}", flush=True)
             else:
                 for item in value[:25]:
                     if isinstance(item, dict):
-                        _print_dict_nicely(item, indent=indent + 2, max_depth=max_depth, is_first_key=True)
+                        _print_dict_nicely(
+                            item,
+                            indent=indent + 2,
+                            max_depth=max_depth,
+                            is_first_key=True,
+                        )
                     else:
                         print(f"{prefix}  - {item}", flush=True)
-                console.print(f"{prefix}  ... and {len(value) - 25} more items", style="dim italic")
+                console.print(
+                    f"{prefix}  ... and {len(value) - 25} more items",
+                    style="dim italic",
+                )
         else:
             # Format value nicely
             if value is None:
@@ -365,6 +398,8 @@ def _print_dict_nicely(data: dict, indent: int = 0, max_depth: int = 3, is_first
                     display_value = display_value[:100] + "..."
 
             if is_current_first:
-                console.print(f"{prefix}• {display_key}: {display_value}", style="bold cyan")
+                console.print(
+                    f"{prefix}• {display_key}: {display_value}", style="bold cyan"
+                )
             else:
                 print(f"{prefix}• {display_key}: {display_value}", flush=True)

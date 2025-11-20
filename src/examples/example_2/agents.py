@@ -6,7 +6,9 @@ from agents.extensions.models.litellm_model import LitellmModel
 from src.core.agent_utils.base import STRONG_MODEL, create_agent
 from src.core.agent_utils.roles import AgentRole, get_tools_for_role
 from src.examples.example_2.hooks import PharmacistAvailabilityHook
-from src.examples.example_2.tools.pharmacist_availability import check_pharmacist_availability
+from src.examples.example_2.tools.pharmacist_availability import (
+    check_pharmacist_availability,
+)
 
 
 def create_team():
@@ -196,7 +198,9 @@ If you need to pass work to another specialist agent, you may hand off to them, 
     )
 
     # Get manager tools and add pharmacist availability check
-    manager_tools = get_tools_for_role(AgentRole.MANAGER) + [check_pharmacist_availability]
+    manager_tools = get_tools_for_role(AgentRole.MANAGER) + [
+        check_pharmacist_availability
+    ]
 
     # Create manager agent with hooks for validation
     manager = Agent(
@@ -257,7 +261,7 @@ Use handoffs to delegate tasks sequentially. You can achieve parallelism by brea
     # Attach hooks to all agents to validate pharmacist handoffs
     hook = PharmacistAvailabilityHook()
     manager.hooks = hook  # type: ignore
-    
+
     all_agents = [manager] + list(initial_team) + [pharmacist_specialist]
     for worker in initial_team + [pharmacist_specialist]:
         worker.handoffs = all_agents  # type: ignore
