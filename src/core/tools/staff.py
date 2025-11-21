@@ -52,10 +52,19 @@ _MOCK_PRESCRIBERS: dict[str, PrescriberInfo] = {
         prescriber_id="DOC-004",
         name="Dr. James Park",
         title="MD",
-        specialization="Emergency Medicine",
-        department="Emergency",
+        specialization="Endocrinology",
+        department="ICU",
         license_number="MED-45678",
-        authorized_for_high_risk=False,  # Not authorized for high-risk
+        authorized_for_high_risk=True,
+    ),
+    "DOC-005": PrescriberInfo(
+        prescriber_id="DOC-005",
+        name="Dr. Lisa Thompson",
+        title="MD",
+        specialization="Vascular Medicine",
+        department="ICU",
+        license_number="MED-56789",
+        authorized_for_high_risk=True,
     ),
 }
 

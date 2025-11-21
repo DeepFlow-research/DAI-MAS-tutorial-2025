@@ -62,7 +62,7 @@ class AgentRole(str, Enum):
     HOSPITAL_OPERATIONS = "hospital_operations"
 
 
-def get_tools_for_role(role: AgentRole) -> list[Tool]:
+def get_tools_for_role(role: AgentRole, include_all_tools: bool = True) -> list[Tool]:
     """
     Get relevant tools for a specific agent role.
 
@@ -72,6 +72,9 @@ def get_tools_for_role(role: AgentRole) -> list[Tool]:
     Returns:
         List of tools assigned to this role
     """
+    if include_all_tools:
+        return get_all_tools()
+    
     role_tools: dict[AgentRole, list[Tool]] = {
         AgentRole.MEDICATION_RECORDS_SPECIALIST: [
             # Relevant tools
@@ -134,6 +137,7 @@ def get_tools_for_role(role: AgentRole) -> list[Tool]:
             verify_dosage,
             get_patient_info,
             check_medication_availability,
+            log_audit_action,
             # Red herring tools
             order_medication,
             order_lab_test,
@@ -248,3 +252,44 @@ def get_red_herring_tools_for_role(role: AgentRole) -> list[Tool]:
     }
 
     return red_herring_tools.get(role, [])
+
+
+def get_all_tools() -> list[Tool]:
+    """
+    Get all available tools.
+
+    Returns:
+        List of all available tools
+    """
+    return [
+        fetch_medication_record,
+        fetch_ward_records,
+        get_record_by_priority,
+        check_medication_availability,
+        get_patient_info,
+        get_recent_lab_results,
+        check_administration_timing,
+        check_drug_interactions,
+        check_hipaa_compliance,
+        verify_dosage,
+        get_prescription_details,
+        log_audit_action,
+        submit_finding,
+        create_audit_plan,
+        get_plan_status,
+        list_plans,
+        update_audit_plan,
+        update_plan_item,
+        get_prescriber_info,
+        submit_medication_change_order,
+        list_pending_approval_requests,
+        get_order_status,
+        get_patient_appointments,
+        get_billing_info,
+        get_staff_schedule,
+        get_ward_capacity,
+        order_lab_test,
+        order_medication,
+        upload_document,
+        send_notification,
+    ]

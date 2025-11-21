@@ -53,15 +53,33 @@ async def main():
     print()
     print("Final Context State:")
     print(f"  Alert Level: {context.alert_level}")
-    print(f"  Crisis Raised: {context.crisis_raised}")
     print(f"  Total Tool Calls: {context.tool_call_count}")
-    print(f"  Crisis Events: {len(context.crisis_events)}")
+    print(f"  Crisis Events Triggered: {len(context.crisis_events)}")
+    print()
+    print("Event Timeline:")
     if context.crisis_events:
         for event in context.crisis_events:
             print(
-                f"    - {event['description']} (triggered at tool call #{event['tool_call_when_triggered']})"
+                f"    - Tool Call #{event['tool_call_when_triggered']:>2}: {event['description']}"
             )
     print()
+    print("Deadline Status:")
+    print(f"  - 30min warning: {'✓' if context.time_warning_30min else '✗'}")
+    print(f"  - 15min warning: {'✓' if context.time_warning_15min else '✗'}")
+    print(f"  - 5min warning:  {'✓' if context.time_warning_5min else '✗'}")
+    print(f"  - Deadline hit:  {'✓' if context.time_up else '✗'}")
+    
+    if context.time_up:
+        print()
+        print("⚠️  DEADLINE REACHED: System was forced to complete under time pressure")
+    elif context.tool_call_count >= 70:
+        print()
+        print("⚠️  NEAR DEADLINE: System was under severe time pressure")
+    
+    print()
+    print("=" * 80)
+    print("SUMMARY")
+    print("=" * 80)
     for line in SUMMARY:
         print(line)
     print()

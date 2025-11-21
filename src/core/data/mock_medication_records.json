@@ -24,6 +24,18 @@
     "prescriber_id": "DOC-001"
   },
   {
+    "record_id": "REC-12350",
+    "patient_id": "P001",
+    "medication": "Amiodarone",
+    "dosage": 200.0,
+    "dosage_unit": "mg",
+    "route": "oral",
+    "administered_at": "2024-11-15T14:00:00Z",
+    "ward": "ICU",
+    "risk_level": "high",
+    "prescriber_id": "DOC-001"
+  },
+  {
     "record_id": "REC-12347",
     "patient_id": "P002",
     "medication": "Aspirin",
@@ -33,6 +45,30 @@
     "administered_at": "2024-11-15T10:00:00Z",
     "ward": "ICU",
     "risk_level": "low",
+    "prescriber_id": "DOC-002"
+  },
+  {
+    "record_id": "REC-12351",
+    "patient_id": "P002",
+    "medication": "Doxorubicin",
+    "dosage": 60.0,
+    "dosage_unit": "mg/m2",
+    "route": "IV",
+    "administered_at": "2024-11-15T11:00:00Z",
+    "ward": "ICU",
+    "risk_level": "critical",
+    "prescriber_id": "DOC-002"
+  },
+  {
+    "record_id": "REC-12352",
+    "patient_id": "P002",
+    "medication": "Meropenem",
+    "dosage": 1000.0,
+    "dosage_unit": "mg",
+    "route": "IV",
+    "administered_at": "2024-11-15T12:00:00Z",
+    "ward": "ICU",
+    "risk_level": "high",
     "prescriber_id": "DOC-002"
   },
   {
@@ -58,6 +94,78 @@
     "ward": "ICU",
     "risk_level": "high",
     "prescriber_id": "DOC-003"
+  },
+  {
+    "record_id": "REC-12353",
+    "patient_id": "P003",
+    "medication": "Midazolam",
+    "dosage": 2.0,
+    "dosage_unit": "mg",
+    "route": "IV",
+    "administered_at": "2024-11-15T13:00:00Z",
+    "ward": "ICU",
+    "risk_level": "high",
+    "prescriber_id": "DOC-003"
+  },
+  {
+    "record_id": "MED-001",
+    "patient_id": "P001",
+    "medication": "Enoxaparin",
+    "dosage": 40.0,
+    "dosage_unit": "mg",
+    "route": "subcutaneous",
+    "administered_at": "2024-11-15T10:15:00Z",
+    "ward": "ICU",
+    "risk_level": "high",
+    "prescriber_id": "DOC-001"
+  },
+  {
+    "record_id": "MED-002",
+    "patient_id": "P002",
+    "medication": "Insulin Regular",
+    "dosage": 10.0,
+    "dosage_unit": "units",
+    "route": "subcutaneous",
+    "administered_at": "2024-11-15T09:45:00Z",
+    "ward": "ICU",
+    "risk_level": "high",
+    "prescriber_id": "DOC-002"
+  },
+  {
+    "record_id": "MED-003",
+    "patient_id": "P003",
+    "medication": "Enoxaparin",
+    "dosage": 40.0,
+    "dosage_unit": "mg",
+    "route": "subcutaneous",
+    "administered_at": "2024-11-15T11:30:00Z",
+    "ward": "ICU",
+    "risk_level": "high",
+    "prescriber_id": "DOC-003"
+  },
+  {
+    "record_id": "MED-004",
+    "patient_id": "P004",
+    "medication": "Insulin Regular",
+    "dosage": 8.0,
+    "dosage_unit": "units",
+    "route": "subcutaneous",
+    "administered_at": "2024-11-15T10:00:00Z",
+    "ward": "ICU",
+    "risk_level": "high",
+    "prescriber_id": "DOC-004"
+  },
+  {
+    "record_id": "MED-025",
+    "patient_id": "P005",
+    "medication": "Warfarin",
+    "dosage": 5.0,
+    "dosage_unit": "mg",
+    "route": "oral",
+    "administered_at": "2024-11-15T21:45:00Z",
+    "ward": "ICU",
+    "risk_level": "high",
+    "prescriber_id": "DOC-005"
   }
 ]
 

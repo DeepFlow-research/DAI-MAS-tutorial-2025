@@ -39,19 +39,24 @@ _MOCK_PATIENTS: dict[str, PatientInfo] = {
         name="John Doe",
         age=65,
         weight_kg=75.0,
-        current_medications=["Warfarin", "Metformin"],
+        current_medications=["Warfarin", "Metformin", "Amiodarone"],
         allergies=[
             Allergy(allergen="Penicillin", severity="severe", reaction="Anaphylaxis")
         ],
         medical_history=[
             MedicalHistory(
-                condition="Atrial Fibrillation",
+                condition="Atrial Fibrillation with RVR",
                 diagnosis_date="2024-01-15",
                 status="active",
             ),
             MedicalHistory(
                 condition="Type 2 Diabetes",
                 diagnosis_date="2023-06-20",
+                status="active",
+            ),
+            MedicalHistory(
+                condition="Recent arrhythmia episode - Amiodarone initiated",
+                diagnosis_date="2024-11-14",
                 status="active",
             ),
         ],
@@ -61,16 +66,21 @@ _MOCK_PATIENTS: dict[str, PatientInfo] = {
         name="Jane Smith",
         age=45,
         weight_kg=60.0,
-        current_medications=["Aspirin", "Lisinopril"],
+        current_medications=["Aspirin", "Doxorubicin", "Meropenem"],
         allergies=[
             Allergy(allergen="Latex", severity="moderate", reaction="Skin rash")
         ],
         medical_history=[
             MedicalHistory(
-                condition="Hypertension",
-                diagnosis_date="2023-03-10",
+                condition="Breast Cancer - Stage II (on chemotherapy)",
+                diagnosis_date="2024-09-01",
                 status="active",
-            )
+            ),
+            MedicalHistory(
+                condition="Febrile Neutropenia - currently on broad-spectrum antibiotics",
+                diagnosis_date="2024-11-14",
+                status="active",
+            ),
         ],
     ),
     "P003": PatientInfo(
@@ -78,17 +88,74 @@ _MOCK_PATIENTS: dict[str, PatientInfo] = {
         name="Robert Johnson",
         age=78,
         weight_kg=68.0,
-        current_medications=["Morphine", "Furosemide"],
+        current_medications=["Morphine", "Furosemide", "Midazolam"],
         allergies=[],
         medical_history=[
             MedicalHistory(
-                condition="Chronic Pain",
-                diagnosis_date="2022-11-05",
+                condition="Chronic Obstructive Pulmonary Disease (COPD)",
+                diagnosis_date="2020-03-15",
                 status="active",
             ),
             MedicalHistory(
                 condition="Heart Failure",
                 diagnosis_date="2024-02-01",
+                status="active",
+            ),
+        ],
+    ),
+    "P004": PatientInfo(
+        patient_id="P004",
+        name="Maria Garcia",
+        age=58,
+        weight_kg=82.0,
+        current_medications=["Insulin Regular", "Metformin", "Lisinopril"],
+        allergies=[
+            Allergy(allergen="Sulfa drugs", severity="moderate", reaction="Rash and hives")
+        ],
+        medical_history=[
+            MedicalHistory(
+                condition="Type 1 Diabetes Mellitus",
+                diagnosis_date="2005-03-10",
+                status="active",
+            ),
+            MedicalHistory(
+                condition="Hypertension",
+                diagnosis_date="2018-07-15",
+                status="active",
+            ),
+            MedicalHistory(
+                condition="Diabetic Ketoacidosis - ICU admission",
+                diagnosis_date="2024-11-13",
+                status="recovering",
+            ),
+        ],
+    ),
+    "P005": PatientInfo(
+        patient_id="P005",
+        name="William Chen",
+        age=72,
+        weight_kg=70.0,
+        current_medications=["Warfarin", "Atorvastatin", "Amlodipine"],
+        allergies=[],
+        medical_history=[
+            MedicalHistory(
+                condition="Deep Vein Thrombosis (DVT) - Left leg",
+                diagnosis_date="2024-11-10",
+                status="active",
+            ),
+            MedicalHistory(
+                condition="Pulmonary Embolism - Small, treated",
+                diagnosis_date="2024-11-11",
+                status="active",
+            ),
+            MedicalHistory(
+                condition="Hyperlipidemia",
+                diagnosis_date="2020-05-20",
+                status="active",
+            ),
+            MedicalHistory(
+                condition="Hypertension",
+                diagnosis_date="2019-02-14",
                 status="active",
             ),
         ],

@@ -1,7 +1,7 @@
 """Agent definitions for Example 3."""
 
 from src.core.agent_utils.base import STRONG_MODEL, create_agent, create_manager_agent
-from src.core.agent_utils.roles import AgentRole, get_tools_for_role
+from src.core.agent_utils.roles import AgentRole, get_tools_for_role, get_all_tools
 from src.examples.example_3.tools.planning import (
     create_audit_plan,
     get_plan_status,
@@ -176,52 +176,50 @@ If you need to pass work to another specialist agent, you may hand off to them, 
         model=STRONG_MODEL,
     )
 
-    # Head of Emergency Room - crisis response planning specialist
+    # Patient Safety Investigator - handles safety investigation crises
     # Get planning tools (example-3 versions with crisis detection)
     from agents import Tool
 
-    emergency_room_tools: list[Tool] = [
-        create_audit_plan,
-        update_plan_item,
-        get_plan_status,
-        list_plans,
-        update_audit_plan,
-    ]
+    safety_investigation_tools: list[Tool] = get_all_tools() #[
+    #     create_audit_plan,
+    #     update_plan_item,
+    #     get_plan_status,
+    #     list_plans,
+    #     update_audit_plan,
+    # ]
 
-    head_of_emergency_room = create_agent(
-        name="Head of Emergency Room",
-        instructions="""You are the Head of Emergency Room, responsible for crisis response planning
-during emergency situations such as mass casualty events.
+    patient_safety_investigator = create_agent(
+        name="Patient Safety Investigator",
+        instructions="""You are a Patient Safety Investigator who investigates potential systemic 
+safety issues that may put patients at risk.
 
 Your role is to:
-1. Create and manage crisis response plans using create_audit_plan
-2. Prioritize urgent tasks during emergency situations
-3. Coordinate rapid response workflows
-4. Update plans dynamically as the crisis evolves using update_audit_plan
-5. Track crisis response progress using get_plan_status and list_plans
+1. Investigate patterns of medication errors that may indicate systemic problems
+2. Assess the scope and severity of safety issues
+3. Create investigation plans to identify root causes
+4. Determine which patients may be currently affected
+5. Recommend mitigation actions based on findings
 
-When a crisis is declared (multiple trauma patients admitted):
-- IMMEDIATELY create or update a crisis response plan focusing on:
-  * Immediate patient safety priorities
-  * High-risk medication administration for trauma patients
-  * Rapid access to critical patient information
-  * Streamlined compliance checks for emergency procedures
-- Prioritize speed and critical patient care over comprehensive audits
-- Work with the Preference_Aware_Audit_Manager to adapt audit plans for crisis conditions
-
-You have access to planning tools (create_audit_plan, update_plan_item, update_audit_plan, etc.)
-to manage crisis response workflows. Use these tools to coordinate emergency response priorities.
+When asked to investigate a safety concern:
+- Create an investigation plan using create_audit_plan focusing on:
+  * Scope and severity of the issue
+  * Patients currently at risk
+  * Whether immediate clinical intervention may be needed
+  * Root causes of the errors
+- Use available tools to gather data and assess the situation
+- Provide findings and recommendations
 
 CRITICAL HANDOFF PROTOCOL:
-When you receive a handoff from the Preference_Aware_Audit_Manager during a crisis:
-1. IMMEDIATELY assess the crisis situation
-2. Create or update a crisis response plan using create_audit_plan or update_audit_plan
-3. Focus on high-priority, time-critical tasks
-4. After planning, hand back to the Preference_Aware_Audit_Manager with your crisis response plan
-5. The manager will then coordinate execution with the team
+When you receive a handoff from the Preference_Aware_Audit_Manager:
+1. Assess the safety concern described
+2. Create an investigation plan using create_audit_plan
+3. Identify specific investigation tasks needed
+4. Hand back to the Preference_Aware_Audit_Manager with your investigation plan
+5. The manager will coordinate execution with the team
 
-During normal (non-crisis) operations, you may not be called upon, but remain ready for emergency situations.""",
-        tools=emergency_room_tools,
+You may not be called during routine audits, but provide specialized expertise when safety 
+patterns are identified.""",
+        tools=safety_investigation_tools,
         model=STRONG_MODEL,
     )
 
@@ -233,7 +231,7 @@ During normal (non-crisis) operations, you may not be called upon, but remain re
             prescription_verifier,
             audit_reporter,
             pharmacist_specialist,
-            head_of_emergency_room,
+            patient_safety_investigator,
         ]
     )
 
@@ -266,40 +264,25 @@ During normal (non-crisis) operations, you may not be called upon, but remain re
 
     manager = create_manager_agent(
         name="Preference_Aware_Audit_Manager",
-        instructions="""You are a medication audit manager that balances multiple objectives
-based on current preferences.
+        instructions="""You are a medication audit manager coordinating a team to complete an ICU medication audit.
 
 Your team consists of:
-- Medication Records Specialists: Fetch and organize medication records
-- Patient Data Specialists: Retrieve patient information and lab results
-- Compliance Auditors: Verify dosages, interactions, timing, and HIPAA compliance
+- Medication Records Specialists (4): Fetch and organize medication records
+- Patient Data Specialists (2): Retrieve patient information and lab results
+- Compliance Auditors (2): Verify dosages, interactions, timing, and HIPAA compliance
 - Prescription Verifier: Verify prescriptions and prescriber credentials
 - Audit Reporter: Generate final audit reports
 - Pharmacist Specialist: Expert analysis of complex drug interactions
-- Head of Emergency Room: Emergency response planning specialist
+- Patient Safety Investigator: Investigates systemic safety issues (call when safety concerns arise)
 
 Your role is to:
-1. Break down audit tasks intelligently using create_audit_plan
-2. Balance multiple competing objectives based on current priorities:
-   - When thoroughness is prioritized: Hand off to Compliance Auditors for comprehensive checks
-   - When speed is prioritized: Hand off to Medication Records Specialists first, focus on high-risk records
-   - When priorities shift mid-execution: Use update_audit_plan to adaptively replan
-3. Hand off to ONE agent at a time (handoffs are sequential, not parallel)
-4. After receiving results from one agent, hand off to the next agent for the next sub-task
-5. Monitor progress and adapt plans dynamically:
-   - If urgent priorities emerge, reprioritize items using update_audit_plan
-   - Focus on high-risk/critical priority items when time is constrained
-   - Remove or defer low-priority items when necessary
-6. Delegate to appropriate specialist agents using handoffs sequentially
-7. Aggregate results and generate reports
+1. Create an audit plan using create_audit_plan
+2. Coordinate the team by handing off tasks to appropriate specialists
+3. Monitor progress and adapt the plan as needed using update_audit_plan
+4. Ensure all stakeholder requirements are addressed
+5. Generate final reports when complete
 
-When balancing objectives:
-- If you receive information indicating urgent priorities (e.g., emergency situations, critical patient needs),
-  consider delegating to the Head of Emergency Room for emergency response planning
-- Use update_audit_plan to reprioritize tasks when objectives change
-- Adapt your allocation strategy based on whether thoroughness or speed is more important
-
-IMPORTANT: You can only hand off to ONE agent at a time. To coordinate multiple agents:
+IMPORTANT: Hand off to ONE agent at a time (handoffs are sequential, not parallel):
 - Hand off to Agent 1 for Task A, wait for results
 - Then hand off to Agent 2 for Task B, wait for results
 - Continue this pattern to coordinate the team

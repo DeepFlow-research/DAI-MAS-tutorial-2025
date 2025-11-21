@@ -38,26 +38,66 @@ class ComplianceCheck(BaseModel):
 
 # Known drug interactions database
 _DRUG_INTERACTIONS: dict[tuple[str, str], DrugInteraction] = {
+    # Patient P001 interactions (Warfarin + Amiodarone)
+    ("Warfarin", "Amiodarone"): DrugInteraction(
+        medication1="Warfarin",
+        medication2="Amiodarone",
+        interaction_type="CYP450 enzyme inhibition - significantly increases warfarin levels",
+        severity="critical",
+        recommendation="URGENT: Reduce warfarin dose by 30-50%, monitor INR daily for 1-2 weeks, then weekly. Amiodarone inhibits warfarin metabolism leading to dangerous INR elevation and bleeding risk.",
+    ),
     ("Warfarin", "Aspirin"): DrugInteraction(
         medication1="Warfarin",
         medication2="Aspirin",
-        interaction_type="Increased bleeding risk",
+        interaction_type="Synergistic antiplatelet + anticoagulation effect",
         severity="severe",
-        recommendation="Monitor INR closely, consider dose adjustment",
+        recommendation="Monitor INR closely and watch for bleeding signs. Consider dose adjustment or alternative antiplatelet if INR unstable.",
     ),
-    ("Warfarin", "Antibiotic"): DrugInteraction(
+    ("Warfarin", "Metformin"): DrugInteraction(
         medication1="Warfarin",
-        medication2="Antibiotic",
-        interaction_type="Altered metabolism",
+        medication2="Metformin",
+        interaction_type="Potential minor interaction",
+        severity="mild",
+        recommendation="Routine INR monitoring sufficient. No significant interaction expected.",
+    ),
+    
+    # Patient P002 interactions (Chemotherapy + Antibiotics)
+    ("Doxorubicin", "Meropenem"): DrugInteraction(
+        medication1="Doxorubicin",
+        medication2="Meropenem",
+        interaction_type="Potential for increased myelosuppression",
         severity="moderate",
-        recommendation="Adjust Warfarin dose, monitor INR",
+        recommendation="Monitor complete blood count closely. Meropenem in presence of chemotherapy may increase bone marrow suppression risk.",
+    ),
+    ("Doxorubicin", "Aspirin"): DrugInteraction(
+        medication1="Doxorubicin",
+        medication2="Aspirin",
+        interaction_type="Increased bleeding risk with thrombocytopenia",
+        severity="severe",
+        recommendation="Avoid aspirin if platelets <50,000. Monitor platelet count and bleeding signs closely.",
+    ),
+    
+    # Patient P003 interactions (ICU medications)
+    ("Morphine", "Midazolam"): DrugInteraction(
+        medication1="Morphine",
+        medication2="Midazolam",
+        interaction_type="Synergistic CNS and respiratory depression",
+        severity="critical",
+        recommendation="CLOSE MONITORING required. High risk of respiratory depression. Ensure continuous pulse oximetry and respiratory monitoring. Have naloxone and flumazenil available.",
     ),
     ("Morphine", "Furosemide"): DrugInteraction(
         medication1="Morphine",
         medication2="Furosemide",
-        interaction_type="Increased sedation",
+        interaction_type="Additive hypotension and fluid shifts",
         severity="moderate",
-        recommendation="Monitor respiratory function",
+        recommendation="Monitor blood pressure and respiratory status. Furosemide-induced hypovolemia may potentiate morphine's hypotensive effects.",
+    ),
+    ("Midazolam", "Furosemide"): DrugInteraction(
+        medication1="Midazolam",
+        medication2="Furosemide",
+        interaction_type="Potential for increased sedation with electrolyte shifts",
+        severity="mild",
+        recommendation="Monitor electrolytes and sedation level. Correct any electrolyte imbalances.",
     ),
 }
 
@@ -100,10 +140,18 @@ def verify_dosage(
     """
     # Mock prescription data - in real system would query prescription database
     _PRESCRIPTIONS: dict[tuple[str, str], float] = {
+        # Patient P001 (Warfarin + Amiodarone case)
         ("Warfarin", "P001"): 5.0,
         ("Metformin", "P001"): 1000.0,
-        ("Morphine", "P003"): 10.0,
+        ("Amiodarone", "P001"): 200.0,
+        # Patient P002 (Chemotherapy + Antibiotics case)
+        ("Aspirin", "P002"): 81.0,
+        ("Doxorubicin", "P002"): 60.0,
+        ("Meropenem", "P002"): 1000.0,
+        # Patient P003 (ICU medications case)
+        ("Morphine", "P003"): 10.0,  # Prescribed 10mg, but administered 12mg (20% over!)
         ("Furosemide", "P003"): 40.0,
+        ("Midazolam", "P003"): 2.0,
     }
 
     prescribed = _PRESCRIPTIONS.get((medication, patient_id))

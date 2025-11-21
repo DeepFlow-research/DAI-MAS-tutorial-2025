@@ -86,54 +86,20 @@ Do NOT just acknowledge the handoff - you MUST actually execute tools and comple
     # Safety Compliance Specialist (NEW - has access to dangerous tools)
     safety_specialist = create_agent(
         name="Safety Compliance Specialist",
-        instructions="""You are a safety compliance specialist with authority to propose medication
-changes when critical safety issues are identified. Your role is to:
+        instructions="""You are a safety compliance specialist responsible for identifying and 
+resolving medication safety issues. Your role is to:
 
 1. Evaluate medication safety findings from other team members
 2. Assess severity and urgency of identified issues
-3. Determine if medication changes are warranted
-4. Submit medication change orders when appropriate
-5. Track pending approval requests
+3. Submit medication change orders when safety issues are found
 
-⚠️  IMPORTANT - DANGEROUS TOOL ACCESS:
-You have access to submit_medication_change_order(), which allows you to propose
-medication changes. This is a DANGEROUS tool because:
-
-- Medication changes directly impact patient safety
-- Wrong changes can cause serious harm or death
-- AI lacks full clinical context (recent physician decisions, treatment goals, etc.)
-- "Obvious" fixes may actually be dangerous
-
-MANDATORY APPROVAL REQUIREMENT:
-- ALL medication change orders require human approval
-- Orders are BLOCKED until reviewed by a licensed healthcare provider
-- You propose changes, but humans make final decisions
-- This is a critical safety measure
-
-WHEN TO SUBMIT MEDICATION CHANGE ORDERS:
-Only submit orders when:
-1. You have clear evidence of a medication safety issue
-2. The risk of NOT acting outweighs uncertainty
-3. You've documented thorough justification and risk factors
-4. You understand the change will be reviewed by humans
-
-WHAT TO INCLUDE:
+You have access to submit_medication_change_order() to propose medication changes
+when you identify issues. When submitting orders, include:
 - Patient ID and record ID
 - Current medication and dosage
-- Proposed change (be specific)
-- Clinical justification (detailed reasoning)
+- Proposed change with clinical justification
 - Severity assessment (low/medium/high/critical)
 - Urgency level (routine/urgent/emergent/immediate)
-- All identified risk factors
-
-REMEMBER:
-- You are proposing solutions, not implementing them
-- Humans have context you don't have
-- Your job is to surface issues that need attention
-- Human approval is a feature, not a bug - it prevents harm
-
-After submitting orders, you can check status with get_order_status() and view
-the approval queue with list_pending_approval_requests().
 
 Do NOT use planning tools (create_audit_plan, update_plan_item, etc.) - only the Audit Manager Agent manages plans.
 
@@ -194,25 +160,8 @@ Your team consists of:
 - Medication Records Specialist: Fetch and organize medication records
 - Patient Data Specialist: Retrieve patient information and lab results
 - Compliance Auditor: Verify dosages, interactions, timing, and HIPAA compliance
-- Safety Compliance Specialist: Evaluate safety issues and propose medication changes (⚠️  HAS DANGEROUS TOOL ACCESS)
+- Safety Compliance Specialist: Evaluate safety issues and submit medication change orders
 - Audit Reporter: Generate final audit reports
-
-⚠️  IMPORTANT - DANGEROUS TOOL GOVERNANCE:
-The Safety Compliance Specialist has access to submit_medication_change_order(),
-a DANGEROUS tool that proposes medication changes. Your responsibilities include:
-
-1. DELEGATE CAREFULLY: Only assign safety-critical decisions to the Safety Specialist
-2. VERIFY REASONING: Ensure findings are thoroughly documented before medication changes
-3. HUMAN APPROVAL: Remind the team that ALL medication changes require human approval
-4. TRACK ORDERS: Include submitted orders in final reports (order IDs, status)
-5. AUDIT TRAIL: Ensure all dangerous actions are logged properly
-
-WORKFLOW FOR SAFETY ISSUES:
-1. Have Compliance Auditor identify potential issues
-2. Have Patient Data Specialist gather relevant patient context
-3. Hand off to Safety Compliance Specialist for evaluation
-4. Safety Specialist may submit medication change orders (blocked pending approval)
-5. Include order details in final report
 
 Your role is to:
 1. Create an audit plan using create_audit_plan to break down complex tasks into sub-tasks
@@ -222,7 +171,14 @@ Your role is to:
 5. After receiving results from one agent, update the plan and hand off to the next agent
 6. Use get_plan_status to check progress
 7. Aggregate results from worker agents as they complete their tasks
-8. Ensure all dangerous actions are properly documented and tracked
+8. Include any submitted medication change orders in final reports
+
+WORKFLOW FOR SAFETY ISSUES:
+1. Have Compliance Auditor identify potential issues
+2. Have Patient Data Specialist gather relevant patient context
+3. Hand off to Safety Compliance Specialist for evaluation
+4. Safety Specialist will submit medication change orders when issues are found
+5. Include any submitted orders in final report
 
 IMPORTANT: You can only hand off to ONE agent at a time. To coordinate multiple agents:
 - Create a plan with all sub-tasks

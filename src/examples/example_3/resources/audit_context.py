@@ -19,7 +19,12 @@ class AuditContext(BaseModel):
     current_preferences: PreferenceWeights = Field(
         default_factory=lambda: NORMAL_PREFERENCES
     )
-    crisis_raised: bool = False  # Whether crisis has been raised
+    crisis_1_triggered: bool = False  # Whether first crisis (safety investigation) has been triggered
+    crisis_2_triggered: bool = False  # Whether second crisis (legal documentation) has been triggered
+    time_warning_30min: bool = False  # 30 min deadline warning triggered
+    time_warning_15min: bool = False  # 15 min deadline warning triggered
+    time_warning_5min: bool = False   # 5 min deadline warning triggered
+    time_up: bool = False              # Deadline reached
 
     model_config = {"extra": "forbid"}
 
@@ -28,18 +33,27 @@ class AuditContext(BaseModel):
         self.tool_call_count += 1
         return self.tool_call_count
 
-    def add_crisis_event(self, description: str, impact: str) -> dict:
+    def add_crisis_event(self, description: str, impact: str, crisis_number: int = 1) -> dict:
         """Add a crisis event and update alert level."""
         event = {
             "timestamp": datetime.now().isoformat(),
             "description": description,
             "impact": impact,
             "tool_call_when_triggered": self.tool_call_count,
+            "crisis_number": crisis_number,
         }
         self.crisis_events.append(event)
         self.alert_level = "crisis"
-        self.current_preferences = CRISIS_PREFERENCES
-        self.crisis_raised = True  # Mark crisis as raised
+        
+        # Update crisis flags
+        if crisis_number == 1:
+            self.crisis_1_triggered = True
+        elif crisis_number == 2:
+            self.crisis_2_triggered = True
+            
+        # Don't override preferences - let them remain in conflict
+        # This better demonstrates the challenge of conflicting objectives
+        
         return event
 
     def get_active_crises(self) -> list[dict]:

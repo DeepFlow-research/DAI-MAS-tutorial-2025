@@ -1,8 +1,8 @@
-# Example 4: Safety & Governance - Human-in-the-Loop
+# Example 4: Safety & Governance
 
 ## Overview
 
-This example demonstrates **why AI agents need human oversight** in high-stakes domains, using a healthcare medication audit scenario where agents have access to dangerous tools that can propose medication changes.
+This example demonstrates **why AI agents need governance controls** in high-stakes domains, using a healthcare medication audit scenario where agents have access to dangerous tools that can propose medication changes.
 
 ## The Scenario
 
@@ -44,27 +44,15 @@ The Safety Compliance Specialist has access to this tool, which allows proposing
 3. **Tempting to Use**: When agents find real problems, they naturally want to fix them
 4. **Realistic Scope Creep**: Systems designed for observation often expand into action
 
-## The Safety Architecture
+## Governance Controls Needed
 
-### Human-in-the-Loop Pattern
+When AI agents have access to dangerous tools, production systems require:
 
-```
-Agent Finds Issue → Evaluates Severity → Proposes Change
-                                              ↓
-                                    🚨 APPROVAL GATE 🚨
-                                              ↓
-                    Human Reviews with Full Context
-                                              ↓
-                                  Approves or Rejects
-```
-
-### Key Safety Features
-
-1. **Default Block**: ALL medication changes require human approval (cannot be bypassed)
-2. **Risk Assessment**: System automatically generates risk analysis for reviewers
-3. **Audit Trail**: All attempts to use dangerous tools are logged
-4. **Clear Warnings**: Agents receive explicit warnings about approval requirements
-5. **Tracking**: Order IDs allow tracking from submission through approval/rejection
+1. **Human Approval Workflows**: Licensed professionals review and authorize changes
+2. **Risk Assessment**: Automated severity and risk classification  
+3. **Audit Trails**: Complete logging of all dangerous tool usage for accountability
+4. **Role-Based Access**: Control who can submit vs approve vs execute changes
+5. **Integration**: Connect with existing systems (EHR, compliance, notifications)
 
 ## What You'll See
 
@@ -72,20 +60,13 @@ Agent Finds Issue → Evaluates Severity → Proposes Change
    - Manager creates audit plan
    - Compliance Auditor finds medication issues
    - Patient Data Specialist gathers context
-   - Safety Specialist evaluates and proposes changes
+   - Safety Specialist evaluates and submits medication change orders
    - Audit Reporter generates final report
 
 2. **Dangerous Tool Usage**:
    - Safety Specialist identifies critical issues
    - Submits medication change orders with justification
-   - Orders are **BLOCKED** pending human approval
-   - System displays clear warnings
-
-3. **Approval Queue**:
-   - All submitted orders shown at end
-   - Risk assessment presented for each
-   - Status: "pending" (blocked)
-   - Waiting for human authorization
+   - Demonstrates why governance controls are essential
 
 ## Why This Matters
 
@@ -102,11 +83,12 @@ What the agent doesn't know:
 - Prescription system update is pending (admin delay)
 - **Reducing the dose could cause another life-threatening clot**
 
-### The Solution is Architectural
+### The Solution is Governance
 
-- Agent submits order → **BLOCKED**
-- Physician reviews with full context → **REJECTS**
-- Patient safety maintained → **HARM PREVENTED**
+In production, proper governance controls would:
+- Agent submits order → **Human reviews with full context**
+- Physician approves or rejects → **Final decision by qualified professional**
+- Patient safety maintained → **Harm prevented through oversight**
 
 ## Key Teaching Points
 
@@ -124,19 +106,19 @@ What the agent doesn't know:
 - Assessing complex risk/benefit tradeoffs
 - Clinical judgment requiring years of training
 
-### 2. Human-in-the-Loop Benefits
+### 2. Governance Controls
 
-**Not a Limitation, but a Feature**:
+**Essential for High-Stakes Domains**:
 - Combines AI pattern detection with human judgment
 - Prevents harm from incomplete information
 - Maintains accountability (humans make final decisions)
-- Builds trust through transparency
+- Builds trust through transparency and oversight
 
-**Trade-offs**:
-- Speed: Human review adds latency (minutes to hours)
-- Scalability: Requires human availability
-- Consistency: Humans may disagree with each other
-- Cost: Human time is expensive
+**Implementation Considerations**:
+- Speed: Human review workflows add latency
+- Scalability: Requires qualified human availability
+- Consistency: Need clear protocols and guidelines
+- Cost: Human oversight and infrastructure investment
 
 ### 3. Broader Applications
 
@@ -159,9 +141,8 @@ python -m src.examples.example_4.main
 # You'll see:
 # 1. Manager creates audit plan
 # 2. Agents execute tasks sequentially
-# 3. Safety Specialist finds issues and proposes changes
-# 4. Orders are BLOCKED with warnings
-# 5. Approval queue displayed at end
+# 3. Safety Specialist finds issues and submits medication change orders
+# 4. Demonstration of why governance controls are critical
 ```
 
 ## Discussion Questions
@@ -213,11 +194,11 @@ example_4/
 
 After running this example, participants should understand:
 
-1. ✅ **Why dangerous tools need approval gates** - Concrete examples of AI limitations
-2. ✅ **How to architect human-in-the-loop systems** - Approval workflows, audit trails
-3. ✅ **Trade-offs in AI safety** - Speed vs. safety, automation vs. oversight
-4. ✅ **Broader implications** - Pattern applies beyond healthcare
-5. ✅ **Responsible AI development** - Safety by design, not as afterthought
+1. ✅ **Why dangerous tools need governance controls** - Concrete examples of AI limitations
+2. ✅ **What governance systems require** - Approval workflows, audit trails, role-based access
+3. ✅ **Trade-offs in AI deployment** - Speed vs. safety, automation vs. oversight
+4. ✅ **Broader implications** - Pattern applies across regulated industries
+5. ✅ **Responsible AI development** - Safety and governance by design, not as afterthought
 
 ## Progression Through Examples
 
@@ -225,19 +206,19 @@ After running this example, participants should understand:
 - **Example 1**: Manager coordinates multiple workers (scale)
 - **Example 2**: Specialist joins mid-audit (ad hoc teaming)
 - **Example 3**: Event-driven priority changes (multi-objective preferences)
-- **Example 4**: Dangerous actions require approval (**safety & governance**) ⭐
+- **Example 4**: Dangerous tools demonstrate need for governance (**safety & compliance**) ⭐
 
-Each example reveals limitations that drive the need for more sophisticated management and governance.
+Each example reveals considerations that drive the need for more sophisticated management and governance.
 
 ## Next Steps
 
-1. Run the example and observe agent behavior
-2. Review the approval queue and risk assessments
-3. Discuss with your team: Where else do you need human-in-the-loop?
-4. Consider: How would you implement the human approval side?
-5. Think about: What other "dangerous tools" exist in your domain?
+1. Run the example and observe how agents use dangerous tools
+2. Discuss with your team: Where else do you need governance controls?
+3. Consider: What would your approval workflow need to include?
+4. Think about: What other "dangerous tools" exist in your domain?
+5. Design: How would you architect governance for your use case?
 
 ---
 
-**Remember**: The goal isn't to limit AI capabilities, but to deploy them safely and responsibly in high-stakes environments. Human-in-the-loop is a feature that enables trust and prevents harm.
+**Remember**: The goal isn't to limit AI capabilities, but to deploy them safely and responsibly in high-stakes environments. Governance controls enable trust and prevent harm.
 
